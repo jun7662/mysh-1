@@ -30,8 +30,8 @@ static int is_built_in_command(const char* command_name)
  */
 int evaluate_command(int n_commands, struct single_command (*commands)[512])
 {
-  if (n_commands > 0) {
-    struct single_command* com = (*commands);
+  for(int i =0; i < n_commands;i++) {
+    struct single_command* com = (*commands+i);
 
     assert(com->argc != 0);
 
