@@ -51,11 +51,20 @@ int evaluate_command(int n_commands, struct single_command (*commands)[512])
       return 1;
     } else {
         if(fork()==0){
-	execv(com->argv[0],com->argv);
-	fprintf(stderr, "%s: command not found\n", com->argv[0]);
-	return 1;
-      }
-      wait();
+	  for(int j = 0; j<com->argc;j++){
+	    if(strcmp(com->argv[j],"&")==0){
+	      free(com->argv[j]);
+	      com->argc -= 1;
+	      if(fork()==0)
+		return 0;
+	      execv(com->argv[0],com->argv);
+	    }
+	  }
+	  execv(com->argv[0],com->argv);
+	  fprintf(stderr, "%s: command not found\n", com->argv[0]);
+	  return 1;
+        }
+	wait();
     }
   }
 
