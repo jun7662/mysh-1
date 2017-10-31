@@ -30,6 +30,7 @@ static int is_built_in_command(const char* command_name)
  */
 int evaluate_command(int n_commands, struct single_command (*commands)[512])
 {
+  char path[][40] = {"/usr/local/bin/", "/usr/bin/","/bin/", "/usr/sbin/","/sbin/"};
   for(int i =0; i < n_commands;i++) {
     struct single_command* com = (*commands+i);
 
@@ -51,6 +52,38 @@ int evaluate_command(int n_commands, struct single_command (*commands)[512])
       return 1;
     } else {
         if(fork()==0){
+      /*for(int j = 0; j<com->argc;j++){
+        if(strcmp(com->argv[j],"&")==0){
+          free(com->argv[j]);
+          com->argc -= 1;
+          if(fork()==0)
+        return 0;
+          execv(com->argv[0],com->argv);
+      }
+    }*/
+      execv(com->argv[0],com->argv);
+      char * tmp = (char*)malloc(strlen(com->argv[0])+1);
+      strcpy(tmp,com->argv[0]);
+      com->argv[0] = (char*)malloc(strlen(path[0])+strlen(com->argv[0]) + 1);
+      com->argv[0] = strcat(path[0],tmp);
+      execv(com->argv[0],com->argv);
+      
+      for(int j = 1;j<5;j++){
+        com->argv[0] = (char*)malloc(strlen(com->argv[0])-strlen(path[j-1])+strlen(path[j])+1);
+        com->argv[0] = strcat(path[j],tmp);
+        execv(com->argv[0],com->argv);
+    }
+      com->argv[0] = (char*)malloc(strlen(com->argv[0])-5);
+      strcpy(com->argv[0],tmp);
+      fprintf(stderr, "%s: command not found\n",com->argv[0]);
+      return 1;
+      }
+    wait();
+    }
+  }
+  return 0;
+}/* {
+        if(fork()==0){
 	  for(int j = 0; j<com->argc;j++){
 	    if(strcmp(com->argv[j],"&")==0){
 	      free(com->argv[j]);
@@ -69,7 +102,7 @@ int evaluate_command(int n_commands, struct single_command (*commands)[512])
   }
 
   return 0;
-}
+}*/
 
 void free_commands(int n_commands, struct single_command (*commands)[512])
 {
