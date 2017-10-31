@@ -34,8 +34,18 @@ int evaluate_command(int n_commands, struct single_command (*commands)[512])
   for(int i =0; i < n_commands;i++) {
     struct single_command* com = (*commands+i);
 
-    assert(com->argc != 0);
-
+    assert(com->argc != 0); 
+    
+    for(int j=0;j<com->argc;j++){
+      if(strstr(com->argv[j],"~") != NULL){
+	char home[] = "/home/aeis/";
+        char * tmp = (char*)malloc(strlen(com->argv[j])+1);
+	tmp = strstr(com->argv[j],"~")+1;
+	com->argv[j] = (char*)malloc(strlen(com->argv[j])+12);
+        strcpy(com->argv[j], "/home/aeis/");
+	strcat(com->argv[j],tmp);
+      }
+    }
     int built_in_pos = is_built_in_command(com->argv[0]);
     if (built_in_pos != -1) {
       if (built_in_commands[built_in_pos].command_validate(com->argc, com->argv)) {
@@ -82,27 +92,7 @@ int evaluate_command(int n_commands, struct single_command (*commands)[512])
     }
   }
   return 0;
-}/* {
-        if(fork()==0){
-	  for(int j = 0; j<com->argc;j++){
-	    if(strcmp(com->argv[j],"&")==0){
-	      free(com->argv[j]);
-	      com->argc -= 1;
-	      if(fork()==0)
-		return 0;
-	      execv(com->argv[0],com->argv);
-	    }
-	  }
-	  execv(com->argv[0],com->argv);
-	  fprintf(stderr, "%s: command not found\n", com->argv[0]);
-	  return 1;
-        }
-	wait();
-    }
-  }
-
-  return 0;
-}*/
+}
 
 void free_commands(int n_commands, struct single_command (*commands)[512])
 {
