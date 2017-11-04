@@ -1,8 +1,8 @@
-#ifndef SIGNAL_H_
-#define SIGNAL_H_
+#ifndef MYSH_SIGNAL_H_
+#define MYSH_SIGNAL_H_
 
-void catch_sigint(int);
+void catch_sigint(int num);
 
-void catch_sigtstp(int);
+void catch_sigtstp(int num);
 
-#endif // SIGNAL_H_
+#endif // MYSH_SIGNAL_H_

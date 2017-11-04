@@ -5,12 +5,16 @@
 #include "commands.h"
 #include "built_in.h"
 #include "utils.h"
+#include "signal.h"
+
 
 int main()
 {
   char buf[8096];
 
   while (1) {
+    catch_sigint(1);
+    catch_sigtstp(1);
     fgets(buf, 8096, stdin);
 
     struct single_command commands[512];
