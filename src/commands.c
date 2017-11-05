@@ -1,10 +1,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include <wait.h>
+#include <errno.h>
 #include <assert.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/un.h>
 
+#include "signal.h"
 #include "commands.h"
 #include "built_in.h"
+
+#define SOCK_PATH "tpf_unix_sock.server"
 
 static struct built_in_command built_in_commands[] = {
   { "cd", do_cd, validate_cd_argv },
@@ -33,7 +42,7 @@ int evaluate_command(int n_commands, struct single_command (*commands)[512])
   char path[][40] = {"/usr/local/bin/", "/usr/bin/","/bin/", "/usr/sbin/","/sbin/"};
   for(int i =0; i < n_commands;i++) {
     struct single_command* com = (*commands+i);
-
+    int pid;
     assert(com->argc != 0); 
     
     for(int j=0;j<com->argc;j++){
@@ -61,7 +70,8 @@ int evaluate_command(int n_commands, struct single_command (*commands)[512])
     } else if (strcmp(com->argv[0], "exit") == 0) {
       return 1;
     } else {
-        if(fork()==0){
+	pid = fork();
+        if(pid==0){
       /*for(int j = 0; j<com->argc;j++){
         if(strcmp(com->argv[j],"&")==0){
           free(com->argv[j]);
@@ -88,7 +98,8 @@ int evaluate_command(int n_commands, struct single_command (*commands)[512])
       fprintf(stderr, "%s: command not found\n",com->argv[0]);
       return 1;
       }
-    wait();
+    printf("done\n");
+    wait(&pid);
     }
   }
   return 0;

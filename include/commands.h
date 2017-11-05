@@ -1,6 +1,7 @@
 #ifndef MYSH_COMMANDS_H_
 #define MYSH_COMMANDS_H_
 
+#define UNIX_PATH_MAX 108
 struct single_command
 {
   int argc;
