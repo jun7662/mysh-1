@@ -8,6 +8,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <pthread.h>
 
 #include "signal.h"
 #include "commands.h"
@@ -40,6 +41,10 @@ static int is_built_in_command(const char* command_name)
 int evaluate_command(int n_commands, struct single_command (*commands)[512])
 {
   char path[][40] = {"/usr/local/bin/", "/usr/bin/","/bin/", "/usr/sbin/","/sbin/"};
+  pthread_t thread;
+  int rc;
+  long t;
+  //rc = pthread_create(&thread, NULL , func_what_thread_do, 
   for(int i =0; i < n_commands;i++) {
     struct single_command* com = (*commands+i);
     int pid;

@@ -30,6 +30,7 @@ int main()
     if (ret == 1) {
       break;
     }
+    memset(buf,0,8096);
   }
 
   return 0;
