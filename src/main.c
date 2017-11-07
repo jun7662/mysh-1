@@ -7,7 +7,7 @@
 #include "commands.h"
 #include "built_in.h"
 #include "utils.h"
-#include "_signal.h"
+#include "signal_handlers.h"
 
 
 int main()
