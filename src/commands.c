@@ -14,7 +14,8 @@
 #include "commands.h"
 #include "built_in.h"
 
-#define SOCK_PATH "tpf_unix_sock.server"
+#define SERVER_PATH "my_socket.server"
+#define CLIENT_PATH "my_socket.client"
 
 static struct built_in_command built_in_commands[] = {
   { "cd", do_cd, validate_cd_argv },
@@ -42,9 +43,62 @@ int evaluate_command(int n_commands, struct single_command (*commands)[512])
 {
   char path[][40] = {"/usr/local/bin/", "/usr/bin/","/bin/", "/usr/sbin/","/sbin/"};
   pthread_t thread;
+  char buf[256];
   int rc;
-  long t;
-  //rc = pthread_create(&thread, NULL , func_what_thread_do, 
+  long t = 2;
+  int client_sock, server_sock;
+  int sock[2];
+  int len;
+  struct sockaddr_un s_addr,  c_addr;
+
+  memset(&s_addr, 0, sizeof(struct sockaddr_un));
+  memset(&c_addr, 0, sizeof(struct sockaddr_un));
+  memset(buf, 0, 256);
+
+  server_sock = socket(AF_UNIX, SOCK_STREAM, 0);
+  if (server_sock == -1){
+    printf("Socket Error\n");
+    return 0;
+  }
+  s_addr.sun_family = AF_UNIX;
+  strcpy(s_addr.sun_path, SERVER_PATH);
+  len = sizeof(s_addr);
+  unlink(SERVER_PATH);
+  rc = bind(server_sock, (struct sockaddr *) &s_addr, len);
+  if (rc == -1){
+    printf("Bind Error\n");
+    close(server_sock);
+    return 0;
+  }
+
+  client_sock = socket(AF_UNIX, SOCK_STREAM, 0);
+  if (client_sock == -1) {
+    printf("CSE\n");
+    return 0;
+  }
+  c_addr.sun_family = AF_UNIX;
+  strcpy(c_addr.sun_path, CLIENT_PATH);
+  unlink(CLIENT_PATH);
+  if(bind(client_sock, (struct sockaddr *)&c_addr, len) == -1){
+    printf("CBE\n");
+    return 0;
+  }
+  //rc = pthread_create(&thread, NULL ,thread_todo, (void *) server_sock);
+  rc = listen(server_sock, 10);  
+  if (rc ==-1) {
+    printf("Listen Error\n");
+    return 0;
+  }
+  rc = connect(client_sock, (struct sockaddr *)&s_addr,sizeof(s_addr));
+  client_sock = accept(server_sock, (struct sockaddr *)&c_addr,&len);
+  if (client_sock == -1){
+    printf("Accpet Error\n");
+    close(server_sock);
+    close(client_sock);
+    return 0;
+  }
+  
+  printf("socket connected\n");
   for(int i =0; i < n_commands;i++) {
     struct single_command* com = (*commands+i);
     int pid;
@@ -86,6 +140,12 @@ int evaluate_command(int n_commands, struct single_command (*commands)[512])
           execv(com->argv[0],com->argv);
       }
     }*/
+      printf("before dup\n");
+      dup2(client_sock, STDIN_FILENO);
+      dup2(client_sock, STDOUT_FILENO);
+      dup2(client_sock, STDERR_FILENO);
+      close(client_sock);
+      printf("dep ok\n");
       execv(com->argv[0],com->argv);
       char * tmp = (char*)malloc(strlen(com->argv[0])+1);
       strcpy(tmp,com->argv[0]);
@@ -103,8 +163,13 @@ int evaluate_command(int n_commands, struct single_command (*commands)[512])
       fprintf(stderr, "%s: command not found\n",com->argv[0]);
       return 1;
       }
-    printf("done\n");
+    close(client_sock);
     wait(&pid);
+    printf("done\n");
+    recv(client_sock, buf, sizeof(buf), 0);
+    //if (read(client_sock, buf, sizeof(buf))>0)
+      printf("buf : %s\n",buf);
+    //else printf("asd");
     }
   }
   return 0;
@@ -125,4 +190,14 @@ void free_commands(int n_commands, struct single_command (*commands)[512])
   }
 
   memset((*commands), 0, sizeof(struct single_command) * n_commands);
+}
+
+void print_hello(void* threadid){
+  long tid;
+  tid = (long)threadid;
+  printf("%ld\n", tid);  
+}
+
+void thread_todo (void * sock){
+  
 }

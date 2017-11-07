@@ -12,4 +12,7 @@ int evaluate_command(int n_commands, struct single_command (*commands)[512]);
 
 void free_commands(int n_commands, struct single_command (*commands)[512]);
 
+void print_hello(void * threadid);
+
+void thread_todo(void * sock);
 #endif // MYSH_COMMANDS_H_
