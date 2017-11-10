@@ -35,8 +35,8 @@ void parse_single_command(const char* command,
   *argv = (char**)malloc(kMaxArgc * sizeof(char*));
   for (int i = 0; i < kMaxArgc; ++i)
     (*argv)[i] = NULL;
-
   char buf[4096];
+  char * tmp;
   strcpy(buf, command);
 
   char *saveptr = NULL;
@@ -45,8 +45,16 @@ void parse_single_command(const char* command,
   int ti = 0;
 
   while (tok != NULL) {
-    (*argv)[ti] = (char*)malloc(strlen(tok));
-    strcpy((*argv)[ti], tok);
+    /*if (strstr(tok,"~") != NULL){
+      tmp = (char*)malloc(strlen(tok)+1);
+      tmp = strstr(tok,"~")+1;
+      (*argv)[ti] = (char*)malloc(strlen(tok) + 12);
+      strcpy(*(argv)[ti], "/home/aeis/");
+      strcat(*(argv)[ti], tmp);
+    }  else{*/
+      (*argv)[ti] = (char*)malloc(strlen(tok));
+      strcpy((*argv)[ti], tok);
+    //}
 
     ++ti;
 
@@ -60,4 +68,14 @@ void parse_single_command(const char* command,
     (*argv)[0] = (char*)malloc(1);
     (*argv)[0][0] = '\0';
   }
+  /*r(int j=0;j<*argc;j++){
+      if(strstr(*(argv)[j],"~") != NULL){
+        char home[] = "/home/aeis/";
+        char * tmp = (char*)malloc(strlen(*(argv)[j])+1);
+        tmp = strstr(*(argv)[j],"~")+1;
+        *(argv)[j] = (char*)malloc(strlen(*(argv)[j])+12);
+        strcpy(*(argv)[j], "/home/aeis/");
+        strcat(*(argv)[j],tmp);
+      }
+    }*/
 }
