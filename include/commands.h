@@ -18,5 +18,5 @@ void print_hello(void * threadid);
 
 void thread_todo(void * sock);
 
-int do_exec(char * commands, char ** argv);
+int do_exec(char * commands, char *** argv);
 #endif // MYSH_COMMANDS_H_
