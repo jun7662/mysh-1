@@ -12,11 +12,13 @@ struct single_command
 
 int evaluate_command(int n_commands, struct single_command (*commands)[512]);
 
+int do_command(struct single_command * command);
+
 void free_commands(int n_commands, struct single_command (*commands)[512]);
 
 void print_hello(void * threadid);
 
-void thread_todo(void * sock);
+void thread_todo(struct single_command * command);
 
 int do_exec(char * commands, char *** argv);
 #endif // MYSH_COMMANDS_H_
