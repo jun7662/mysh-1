@@ -1,11 +1,11 @@
 #include <stdio.h>
 #include <string.h>
-
+#include <sys/wait.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <linux/limits.h>
-
+#include <commands.h>
 #include "built_in.h"
 
 int do_cd(int argc, char** argv) {
@@ -35,7 +35,12 @@ int do_pwd(int argc, char** argv) {
 int do_fg(int argc, char** argv) {
   if (!validate_fg_argv(argc, argv))
     return -1;
-
+  int pid, status;
+  if( (pid = waitpid(-1,&status,WNOHANG)) > 0){
+    fprintf(stderr,"%d done %s\n",bg.pid, bg.cname);
+    bg.flag = 0;
+  }
+  else fprintf(stderr,"%d running %s\n",bg.pid, bg.cname);
   // TODO: Fill this.
 
   return 0;

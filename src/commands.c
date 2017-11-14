@@ -23,6 +23,8 @@ static struct built_in_command built_in_commands[] = {
   { "fg", do_fg, validate_fg_argv }
 };
 
+
+
 static int is_built_in_command(const char* command_name)
 {
   static const int n_built_in_commands = sizeof(built_in_commands) / sizeof(built_in_commands[0]);
@@ -39,6 +41,8 @@ static int is_built_in_command(const char* command_name)
 /*
  * Description: Currently this function only handles single built_in commands. You should modify this structure to launch process and offer pipeline functionality.
  */
+
+
 int evaluate_command(int n_commands, struct single_command (*commands)[512])
 {
   pthread_t thread;
@@ -50,7 +54,9 @@ int evaluate_command(int n_commands, struct single_command (*commands)[512])
   memset(&s_addr, 0, sizeof(struct sockaddr_un));
   memset(&c_addr, 0, sizeof(struct sockaddr_un));
   memset(buf, 0, 256);
+ 
   
+ 
   if (n_commands == 1) return do_command(*commands);
 
   if(n_commands > 1){
@@ -70,7 +76,6 @@ int evaluate_command(int n_commands, struct single_command (*commands)[512])
     s_addr.sun_family = AF_UNIX;
     strcpy(s_addr.sun_path, SOCKET_PATH);
     
-//    pthread_create(&thread,NULL,thread_todo,*commands+1);
     while(1){
       if(connect(client_sock, (struct sockaddr *) &s_addr, sizeof(s_addr)) != -1) {
 //        printf("connection succes\n");
@@ -91,7 +96,6 @@ int evaluate_command(int n_commands, struct single_command (*commands)[512])
     }
     close(client_sock);
     wait(&status);
-//    pthread_join(thread,NULL);
   }
   return 0;
 }
@@ -201,8 +205,18 @@ int do_exec(char * commands, char *** argv){
 
 int do_command(struct single_command * command){
   struct single_command* com = command;
-  int pid, status;
+  int pid, status, bg_status = 0;
   assert(com->argc != 0);
+
+  if(strcmp(com->argv[com->argc-1],"&")==0){
+    bg.pid = 0;
+    bg.flag = 1;
+    bg_status = 1;
+    strcpy(bg.cname,com->argv[0]);
+    com->argv[com->argc-1] = NULL;
+    free(com->argv[com->argc-1]);
+    (com->argc)--;
+  }
 
   for(int j=0;j<com->argc;j++){
     if(strstr(com->argv[j],"~") != NULL){
@@ -214,6 +228,8 @@ int do_command(struct single_command * command){
       strcat(com->argv[j],tmp);
     } // path resoultion ~
   }
+  
+
   int built_in_pos = is_built_in_command(com->argv[0]);
   if (built_in_pos != -1) {
     if (built_in_commands[built_in_pos].command_validate(com->argc, com->argv)) {
@@ -235,7 +251,21 @@ int do_command(struct single_command * command){
       fprintf(stderr, "%s: command not found\n",com->argv[0]);        
       exit(1);
     }
-    wait(&status);
+//    wait(&status);
+    if(bg_status != 1) wait(&status);
+    else {
+      signal(SIGCHLD,childhandler);
+      bg.pid = pid;
+    }
   }
   return 0;
+}
+
+void childhandler(int signalNo)
+{
+  int status, pid;
+  pid = waitpid(-1,&status,0);
+  if(WIFEXITED(status)){
+    fprintf(stderr,"%d done %s\n",bg.pid,bg.cname);
+  }
 }
